@@ -108,12 +108,18 @@ class Maze:
 
     def Save(self, filename: str) -> None:
         with open(filename, "wb+") as file:
-            pickle.dump((self.width, self.height, self.cells), file)
+            pickle.dump(self, file)
 
     def Load(self, filename: str) -> None:
         with open(filename, "rb") as file:
             temp = pickle.load(file)
-        self.width, self.height, self.cells = temp[0], temp[1], temp[2]
+        self._cells = temp._cells
+        self._end = temp._end
+        self._height = temp._height
+        self._player_position = temp._player_position
+        self._solution = temp._solution
+        self._start = temp._start
+        self._width = temp._width
 
     def Resize(self, width: int, height: int, generate=True) -> None:
         self.__init__(width, height, generate)
