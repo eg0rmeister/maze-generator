@@ -1,4 +1,5 @@
 import random
+import pickle
 
 # symbols for drawing
 N_s = chr(9589)  # ╵
@@ -21,7 +22,7 @@ ESW_s = chr(9516)  # ┬
 NESW_s = chr(9532)  # ┼
 
 
-def getWall(walls):
+def getWall(walls: int) -> str:
     # input is binary number NESW
     # first bit says if there is wall to the north
     # second bit says if there is wall to the east
@@ -67,20 +68,25 @@ def getWall(walls):
 class Maze:
     _width = 0
 
-    def get_width(self):
+    def get_width(self) -> int:
         return self._width
 
     width = property(get_width)
 
     _height = 0
 
-    def get_height(self):
+    def get_height(self) -> int:
         return self._height
     height = property(get_height)
 
-    def __init__(self, width, height):
+    def __init__(self, width=1, height=1) -> None:
         if (width < 2 or height < 2):
             raise Exception
+        self.Generate(width, height)
+
+    def Generate(self, width=1, height=1) -> None:
+        if width < 1 or height < 1:
+            raise Exception("Maze cannot have a dimension of less than 1")
         self._height = height
         self._width = width
         self._cells = [[2 for i in range(2 * self.width + 1)]]
@@ -91,10 +97,19 @@ class Maze:
             self._cells[-1].append(2)
         self._cells.append([2 for i in range(2 * self.width + 1)])
 
-    def GenerateMaze(self):
-        raise NotImplementedError
+    def Save(self, filename: str) -> None:
+        with open(filename, "wb+") as file:
+            pickle.dump((self.width, self.height, self.cells), file)
 
-    def ShowMaze(self):
+    def Load(self, filename: str) -> None:
+        with open(filename, "rb") as file:
+            temp = pickle.load(file)
+        self.width, self.height, self.cells = temp[0], temp[1], temp[2]
+
+    def Resize(self, width: int, height: int, generate=True) -> None:
+        self.__init__(width, height, generate)
+
+    def Show(self) -> None:
         for i in range(2 * self.height + 1):
             for j in range(2 * self.width + 1):
                 if self._cells[i][j] == 0:
@@ -120,7 +135,8 @@ class Maze:
 
 
 class DFSMaze(Maze):
-    def GenerateMaze(self):
+    def Generate(self, width=0, height=0) -> None:
+        super().Generate(width, height)
         visited = set((1, 1))
         stack = [(1, 1)]
         stack_len = 1
@@ -181,11 +197,12 @@ class OstTreeMaze(Maze):
 
         ref = property(GetRef, SetRef)
 
-    def GenerateMaze(self):
+    def Generate(self, width=1, height=1) -> None:
+        super().Generate(width, height)
         walls = []
         cells = dict()
-        for i in range(1, 2 * self.width):
-            for j in range(1, 2 * self.height):
+        for i in range(1, 2 * self.height):
+            for j in range(1, 2 * self.width):
                 if ((i & 1) ^ (j & 1)):
                     walls.append((i, j))
                 elif (((i & 1) & (j & 1))):
@@ -208,3 +225,5 @@ class OstTreeMaze(Maze):
                     self._cells[wall[0]][wall[1]] = 0
                     cells[(wall[0] - 1, wall[1])].ref = (
                         cells[(wall[0] + 1, wall[1])].ref)
+        self._cells[0][1] = 0
+        self._cells[2 * self.height][2 * self.width - 1] = 0
