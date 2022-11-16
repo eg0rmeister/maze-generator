@@ -14,13 +14,9 @@ ES_s = chr(9484)  # ┌
 EW_s = chr(9472)  # ─
 SW_s = chr(9488)  # ┐
 
-NES_s = chr(9500)  # ├
-NEW_s = chr(9524)  # ┴
-NSW_s = chr(9508)  # ┤
-ESW_s = chr(9516)  # ┬
+player_s = chr(9532)  # ┼
 
-NESW_s = chr(9532)  # ┼
-
+wall_s = chr(0x2588)  # █
 
 def getWall(walls: int) -> str:
     # input is binary number NESW
@@ -31,8 +27,19 @@ def getWall(walls: int) -> str:
 
     if (walls == 0b0000):
         return ' '
-    # else:
-    #     return chr(0x2588) # █
+    else:
+        return wall_s  # █
+
+
+def getPath(walls: int) -> str:
+    # input is binary number NESW
+    # first bit says if there is path to the north
+    # second bit says if there is path to the east
+    # third bit says if there is path to the south
+    # fourth bit says if there is path to the west
+
+    if (walls == 0b0000):
+        return ' '
     if (walls == 0b0001):
         return W_s
     if (walls == 0b0010):
@@ -80,13 +87,15 @@ class Maze:
     height = property(get_height)
 
     def __init__(self, width=1, height=1) -> None:
-        if (width < 2 or height < 2):
-            raise Exception
         self.Generate(width, height)
 
     def Generate(self, width=1, height=1) -> None:
         if width < 1 or height < 1:
             raise Exception("Maze cannot have a dimension of less than 1")
+        self._start = (1, 1)
+        self._end = (2 * height - 1, 2 * width - 1)
+        self._player_position = list(self._start)
+        self._solution = None
         self._height = height
         self._width = width
         self._cells = [[2 for i in range(2 * self.width + 1)]]
@@ -108,6 +117,33 @@ class Maze:
 
     def Resize(self, width: int, height: int, generate=True) -> None:
         self.__init__(width, height, generate)
+
+    def ShowGame(self) -> None:
+        for i in range(2 * self.height + 1):
+            for j in range(2 * self.width + 1):
+                if self._cells[i][j] == 0:
+                    if self._player_position[0] == i and self._player_position[1] == j:
+                        print(player_s, end='')
+                    else:
+                        print(' ', end='')
+                else:
+                    top = 0
+                    right = 0
+                    bottom = 0
+                    left = 0
+                    if i != 0:
+                        top = self._cells[i - 1][j] != 0
+                    if j != 2 * self.width:
+                        right = self._cells[i][j + 1] != 0
+                    if i != 2 * self.height:
+                        bottom = self._cells[i + 1][j] != 0
+                    if j != 0:
+                        left = self._cells[i][j - 1] != 0
+                    print(getWall((top << 3) +
+                                  (right << 2) +
+                                  (bottom << 1) +
+                                  (left << 0)), end='')
+            print()
 
     def Show(self) -> None:
         for i in range(2 * self.height + 1):
@@ -133,14 +169,145 @@ class Maze:
                                   (left << 0)), end='')
             print()
 
+    def Solve(self) -> tuple:
+        if self._solution == None:
+            visited = set([self._start])
+            stack = [self._start]
+            stack_len = 1
+            while stack_len != 0:
+                to_north = (stack[-1][0] - 2, stack[-1][1])
+                to_east = (stack[-1][0], stack[-1][1] + 2)
+                to_south = (stack[-1][0] + 2, stack[-1][1])
+                to_west = (stack[-1][0], stack[-1][1] - 2)
+                if (to_north[0] > 0 and
+                        to_north not in visited and
+                        self._cells[stack[-1][0] - 1][stack[-1][1]] == 0):
+                    to_visit = to_north
+                elif (to_east[1] < 2 * self.width and
+                      to_east not in visited and
+                      self._cells[stack[-1][0]][stack[-1][1] + 1] == 0):
+                    to_visit = to_east
+                elif (to_south[0] < 2 * self.height and
+                      to_south not in visited and
+                      self._cells[stack[-1][0] + 1][stack[-1][1]] == 0):
+                    to_visit = to_south
+                elif (to_west[1] > 0 and
+                      to_west not in visited and
+                      self._cells[stack[-1][0]][stack[-1][1] - 1] == 0):
+                    to_visit = to_west
+                else:
+                    stack.pop()
+                    stack_len -= 1
+                    continue
+                stack_len += 1
+                stack.append(to_visit)
+                visited.add(stack[-1])
+                if stack[-1] == self._end:
+                    solution = tuple(((i[0] + 1) >> 1, (i[1] + 1) >> 1)
+                                     for i in stack)
+                    self._solution = solution
+                    return solution
+            raise Exception("No solution")
+        else:
+            return self._solution
+
+    def ShowSolution(self) -> None:
+        solution = [(i[0] * 2 - 1, i[1] * 2 - 1) for i in self.Solve()]
+        for i in range(len(solution) - 1):
+            solution.insert(2 * i + 1, (solution[2 * i][0] // 2 + solution[2 * i + 1][0] // 2 + 1,
+                                        solution[2 * i][1] // 2 + solution[2 * i + 1][1] // 2 + 1))
+        solution = tuple(solution)
+        indexes = dict(((solution[i], i) for i in range(len(solution))))
+        for i in range(2 * self.height + 1):
+            for j in range(2 * self.width + 1):
+                if self._cells[i][j] == 0:
+                    if (i, j) in solution:
+                        index = indexes[(i, j)]
+                        top = ((index > 0 and
+                                (i - 1, j) == solution[index-1]) or
+                               (index < len(solution) - 1 and
+                                (i - 1, j) == solution[index+1]))
+                        right = ((index > 0 and
+                                  (i, j + 1) == solution[index-1]) or
+                                 (index < len(solution) - 1 and
+                                  (i, j + 1) == solution[index+1]))
+                        bottom = ((index > 0 and
+                                   (i + 1, j) == solution[index-1]) or
+                                  (index < len(solution) - 1 and
+                                   (i + 1, j) == solution[index+1]))
+                        left = ((index > 0 and
+                                 (i, j - 1) == solution[index-1]) or
+                                (index < len(solution) - 1 and
+                                 (i, j - 1) == solution[index+1]))
+                        print(getPath((top << 3) +
+                                      (right << 2) +
+                                      (bottom << 1) +
+                                      (left << 0)), end='')
+                    else:
+                        print(' ', end='')
+                else:
+                    top = 0
+                    right = 0
+                    bottom = 0
+                    left = 0
+                    if i != 0:
+                        top = self._cells[i - 1][j] != 0
+                    if j != 2 * self.width:
+                        right = self._cells[i][j + 1] != 0
+                    if i != 2 * self.height:
+                        bottom = self._cells[i + 1][j] != 0
+                    if j != 0:
+                        left = self._cells[i][j - 1] != 0
+                    print(getWall((top << 3) +
+                                  (right << 2) +
+                                  (bottom << 1) +
+                                  (left << 0)), end='')
+            print()
+
+    def GameStatus(self) -> bool:
+        return (self._player_position[0] == self._end[0] and
+                self._player_position[1] == self._end[1])
+
+    status = property(GameStatus)
+
+    def Move(self, move: str) -> bool:
+        if move.lower() == 'w':
+            if (self._player_position[0] != 1 and
+                    self._cells[self._player_position[0] - 1][self._player_position[1]] == 0):
+                self._player_position[0] -= 2
+                return True
+            return False
+        if move.lower() == 'd':
+            if (self._player_position[1] != 2 * self.width - 1 and
+                    self._cells[self._player_position[0]][self._player_position[1] + 1] == 0):
+                self._player_position[1] += 2
+                return True
+            return False
+        if move.lower() == 's':
+            if (self._player_position[0] != 2 * self.height - 1 and
+                    self._cells[self._player_position[0] + 1][self._player_position[1]] == 0):
+                self._player_position[0] += 2
+                return True
+            return False
+        if move.lower() == 'a':
+            if (self._player_position[1] != 1 and
+                    self._cells[self._player_position[0]][self._player_position[1] - 1] == 0):
+                self._player_position[1] -= 2
+                return True
+            return False
+        return False
+
 
 class DFSMaze(Maze):
     def Generate(self, width=0, height=0) -> None:
         super().Generate(width, height)
-        visited = set((1, 1))
-        stack = [(1, 1)]
+        visited = set([self._start])
+        stack = [self._start]
         stack_len = 1
         while stack_len != 0:
+            if stack[-1] == self._end:
+                self._solution = tuple(((i[0] + 1) >> 1, (i[1] + 1) >> 1)
+                                       for i in stack)
             can_visit = []
             to_north = (stack[-1][0] - 2, stack[-1][1])
             to_east = (stack[-1][0], stack[-1][1] + 2)
@@ -175,7 +342,7 @@ class DFSMaze(Maze):
         self._cells[2 * self.height][2 * self.width - 1] = 0
 
 
-class OstTreeMaze(Maze):
+class SpanningTreeMaze(Maze):
     class __ref:
         __refs = None
 
