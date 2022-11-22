@@ -32,6 +32,7 @@ wrong_move_message = "that move is prohibited"
 winning_message = "You Won!"
 
 help_message = """
+                \tw/a/s/d -- move the character '┼'\n
                 \thelp -- display these tips\n
                 \texit and solve -- exit the game and display the solution\n
                 \texit -- exit the game WITHOUT displaying solution\n
