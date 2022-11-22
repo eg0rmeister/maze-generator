@@ -1,23 +1,7 @@
 import pickle
 import random
 
-# symbols for drawing
-N_s = chr(9589)  # ╵
-E_s = chr(9590)  # ╶
-S_s = chr(9591)  # ╷
-W_s = chr(9588)  # ╴
-
-NE_s = chr(9492)  # └
-NS_s = chr(9474)  # │
-NW_s = chr(9496)  # ┘
-ES_s = chr(9484)  # ┌
-EW_s = chr(9472)  # ─
-SW_s = chr(9488)  # ┐
-
-player_s = chr(9532)  # ┼
-
-wall_s = chr(0x2588)  # █
-
+import assets.globals as globals
 
 def getWall(walls: int) -> str:
     """
@@ -32,7 +16,7 @@ def getWall(walls: int) -> str:
     if (walls == 0):
         return ' '
     else:
-        return wall_s  # █
+        return globals.wall_s  # █
 
 
 def getPath(walls: int) -> str:
@@ -48,25 +32,25 @@ def getPath(walls: int) -> str:
     if (walls == 0b0000):
         return ' '
     if (walls == 0b0001):
-        return W_s
+        return globals.W_s
     if (walls == 0b0010):
-        return S_s
+        return globals.S_s
     if (walls == 0b0011):
-        return SW_s
+        return globals.SW_s
     if (walls == 0b0100):
-        return E_s
+        return globals.E_s
     if (walls == 0b0101):
-        return EW_s
+        return globals.EW_s
     if (walls == 0b0110):
-        return ES_s
+        return globals.ES_s
     if (walls == 0b1000):
-        return N_s
+        return globals.N_s
     if (walls == 0b1001):
-        return NW_s
+        return globals.NW_s
     if (walls == 0b1010):
-        return NS_s
+        return globals.NS_s
     if (walls == 0b1100):
-        return NE_s
+        return globals.NE_s
 
 
 class Maze:
@@ -147,7 +131,7 @@ class Maze:
             for j in range(2 * self.width + 1):
                 if self._cells[i][j] == 0:
                     if self._player_position[0] == i and self._player_position[1] == j:
-                        print(player_s, end='')
+                        print(globals.player_s, end='')
                     else:
                         print(' ', end='')
                 else:
