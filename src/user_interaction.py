@@ -1,3 +1,5 @@
+import os
+
 import assets.globals as globals
 import src.maze_generator as maze_generator
 
@@ -8,11 +10,15 @@ def GetMaze(maze_type, maze_size):
         maze = maze_generator.DFSMaze(maze_size[0], maze_size[1])
     return maze
 
+def clearScreen():
+    os.system(globals.clear_command)
+
 def PlayGame(maze: maze_generator.Maze):
     while not maze.status:
         print('\n')
         maze.ShowGame()
         move = input("enter your move(wasd) or 'help' for available commands':")
+        clearScreen()
         if (move == globals.command_help):
             print(globals.help_message)
         elif (move == globals.command_solution):

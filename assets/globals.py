@@ -1,3 +1,6 @@
+import os
+
+
 # symbols for drawing
 N_s = chr(9589)  # ╵
 E_s = chr(9590)  # ╶
@@ -40,3 +43,8 @@ help_message = """
                 \tsave <filename> -- save the game to file named <filename>\n
                 \tload <filename> -- load the game from file named <filename>\n
                """
+
+if os.name == 'nt':
+    clear_command = "cls"
+elif os.name == 'posix':
+    clear_command = "clear"
