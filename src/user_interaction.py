@@ -1,10 +1,13 @@
-import maze_generator
-import sys
-if (sys.argv[1].lower() == "spanning_tree"):
-    maze = maze_generator.SpanningTreeMaze(int(sys.argv[2]), int(sys.argv[3]))
-elif (sys.argv[1].lower() == "dfs"):
-    maze = maze_generator.DFSMaze(int(sys.argv[2]), int(sys.argv[3]))
-if (sys.argv[4] == "play"):
+import src.maze_generator as maze_generator
+
+def GetMaze(maze_type, maze_size):
+    if (maze_type.lower() == "spanning_tree"):
+        maze = maze_generator.SpanningTreeMaze(maze_size[0], maze_size[1])
+    elif (maze_type.lower() == "dfs"):
+        maze = maze_generator.DFSMaze(maze_size[0], maze_size[1])
+    return maze
+        
+def PlayGame(maze: maze_generator.Maze):
     while not maze.status:
         print('\n')
         maze.ShowGame()
@@ -32,7 +35,9 @@ if (sys.argv[4] == "play"):
     if maze.status:
         maze.ShowSolution()
         print("You Won!")
-elif (sys.argv[4].lower() == "show"):
+
+
+def ShowMaze(maze: maze_generator.Maze):
     maze.ShowSolution()
     print('\n\n')
     maze.Show()
