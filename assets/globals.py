@@ -28,10 +28,12 @@ command_help = "h"
 command_solution = "1"
 command_save = "f"
 command_load = "r"
+
 command_exit = "escape"
+command_restart = "r"
 
 wrong_move_message = "that move is prohibited"
-winning_message = "You Won! press escape to exit or r to start over"
+winning_message = "You Won! press escape to exit"
 
 win_status = 1
 exit_status = 0
@@ -46,8 +48,11 @@ help_message = """
                """
 
 tip = "use wasd to move or h to display help message"
-loading_tip = "enter load location"
-saving_tip = "enter save location"
+
+loading_message = "loaded successfully"
+saving_message = "saved successfully"
+saving_location = "memory"
+
 
 if os.name == 'nt':
     clear_command = "cls"

@@ -17,25 +17,19 @@ def clearScreen():
     os.system(globals.clear_command)
 
 def PlayGame(maze: maze_generator.Maze):
-    def UnhookInput(message):
-        nonlocal hook
-        keyboard.unhook(hook)
-        ret = keyboard.record('enter',)
-        print('\r')
-        hook = keyboard.on_release(Callback)
-        return ret
-    
-    def Callback(name):
+    def PlayCallback(name):
         nonlocal hook
         clearScreen()
-        if (name.name == globals.command_help):
+        if (name == None or name.name == globals.command_help):
             print(globals.help_message)
         elif (name.name == globals.command_solution):
             maze.ShowSolution()
         elif (name.name == globals.command_save):
-            maze.Save(UnhookInput(globals.saving_tip))
+            maze.Save(globals.saving_location)
+            print(globals.saving_message)
         elif (name.name == globals.command_load):
-            maze.Load(UnhookInput(globals.loading_tip))
+            maze.Load(globals.saving_location)
+            print(globals.loading_message)
         elif not maze.Move(name.name):
             print(globals.wrong_move_message)
         if maze.status:
@@ -45,7 +39,7 @@ def PlayGame(maze: maze_generator.Maze):
             return
         maze.ShowGame()
         print(globals.tip)
-    hook = keyboard.on_release(Callback)
+    hook = keyboard.on_release(PlayCallback)
     clearScreen()
     print(globals.help_message)
     maze.ShowGame()
