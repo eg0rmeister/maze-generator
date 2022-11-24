@@ -3,7 +3,8 @@ import random
 
 import assets.globals as globals
 
-def getWall(walls: int) -> str:
+
+def GetWall(walls: int) -> str:
     """
      Input is binary number NESW.
      First bit says if there is wall to the north.
@@ -19,7 +20,7 @@ def getWall(walls: int) -> str:
         return globals.wall_s  # █
 
 
-def getPath(walls: int) -> str:
+def GetPath(walls: int) -> str:
     """
      Input is binary number NESW.
      First bit says if there is path to the north.
@@ -28,7 +29,7 @@ def getPath(walls: int) -> str:
      Fourth bit says if there is path to the west.
      Returns path symbol connecting corresponding parts.
     """
-    
+
     if (walls == 0b0000):
         return ' '
     if (walls == 0b0001):
@@ -124,6 +125,26 @@ class Maze:
 
         self.Generate(width, height, generate)
 
+    def GetSimpleWall(self, x, y):
+        """Returns wall symbol for specific position of the maze"""
+
+        top = 0
+        right = 0
+        bottom = 0
+        left = 0
+        if x != 0:
+            top = self._cells[x - 1][y] != 0
+        if y != 2 * self.width:
+            right = self._cells[x][y + 1] != 0
+        if x != 2 * self.height:
+            bottom = self._cells[x + 1][y] != 0
+        if y != 0:
+            left = self._cells[x][y - 1] != 0
+        return GetWall((top << 3) +
+                       (right << 2) +
+                       (bottom << 1) +
+                       (left << 0))
+
     def ShowGame(self) -> None:
         """Prints the current state of the game to the console"""
 
@@ -135,22 +156,7 @@ class Maze:
                     else:
                         print(' ', end='')
                 else:
-                    top = 0
-                    right = 0
-                    bottom = 0
-                    left = 0
-                    if i != 0:
-                        top = self._cells[i - 1][j] != 0
-                    if j != 2 * self.width:
-                        right = self._cells[i][j + 1] != 0
-                    if i != 2 * self.height:
-                        bottom = self._cells[i + 1][j] != 0
-                    if j != 0:
-                        left = self._cells[i][j - 1] != 0
-                    print(getWall((top << 3) +
-                                  (right << 2) +
-                                  (bottom << 1) +
-                                  (left << 0)), end='')
+                    print(self.GetSimpleWall(i, j), end='')
             print()
 
     def Show(self) -> None:
@@ -161,23 +167,31 @@ class Maze:
                 if self._cells[i][j] == 0:
                     print(' ', end='')
                 else:
-                    top = 0
-                    right = 0
-                    bottom = 0
-                    left = 0
-                    if i != 0:
-                        top = self._cells[i - 1][j] != 0
-                    if j != 2 * self.width:
-                        right = self._cells[i][j + 1] != 0
-                    if i != 2 * self.height:
-                        bottom = self._cells[i + 1][j] != 0
-                    if j != 0:
-                        left = self._cells[i][j - 1] != 0
-                    print(getWall((top << 3) +
-                                  (right << 2) +
-                                  (bottom << 1) +
-                                  (left << 0)), end='')
+                    print(self.GetSimpleWall(i, j), end='')
+
             print()
+
+    def GetWays(self, pos, visited):
+        """
+            Returns where you can go directly from given position
+            without going anywhere already in visited. Does not care about walls.
+        """
+
+        to_north = (pos[0] - 2, pos[1])
+        to_east = (pos[0], pos[1] + 2)
+        to_south = (pos[0] + 2, pos[1])
+        to_west = (pos[0], pos[1] - 2)
+        can_visit = []
+
+        if (to_north[0] > 0 and to_north not in visited):
+            can_visit.append(to_north)
+        if (to_east[1] < 2 * self.width and to_east not in visited):
+            can_visit.append(to_east)
+        if (to_south[0] < 2 * self.height and to_south not in visited):
+            can_visit.append(to_south)
+        if (to_west[1] > 0 and to_west not in visited):
+            can_visit.append(to_west)
+        return can_visit
 
     def Solve(self) -> tuple:
         """
@@ -190,34 +204,21 @@ class Maze:
             stack = [self._start]
             stack_len = 1
             while stack_len != 0:
-                to_north = (stack[-1][0] - 2, stack[-1][1])
-                to_east = (stack[-1][0], stack[-1][1] + 2)
-                to_south = (stack[-1][0] + 2, stack[-1][1])
-                to_west = (stack[-1][0], stack[-1][1] - 2)
-                if (to_north[0] > 0 and
-                        to_north not in visited and
-                        self._cells[stack[-1][0] - 1][stack[-1][1]] == 0):
-                    to_visit = to_north
-                elif (to_east[1] < 2 * self.width and
-                      to_east not in visited and
-                      self._cells[stack[-1][0]][stack[-1][1] + 1] == 0):
-                    to_visit = to_east
-                elif (to_south[0] < 2 * self.height and
-                      to_south not in visited and
-                      self._cells[stack[-1][0] + 1][stack[-1][1]] == 0):
-                    to_visit = to_south
-                elif (to_west[1] > 0 and
-                      to_west not in visited and
-                      self._cells[stack[-1][0]][stack[-1][1] - 1] == 0):
-                    to_visit = to_west
-                else:
+                temp = True
+                for cell in self.GetWays(stack[-1], visited):
+                    if (self._cells[(stack[-1][0] + cell[0]) // 2]
+                                   [(stack[-1][1] + cell[1]) //2] == 0):
+                        to_visit = cell
+                        temp = False
+                        break
+                if temp:
                     stack.pop()
                     stack_len -= 1
                     continue
                 stack_len += 1
                 stack.append(to_visit)
-                visited.add(stack[-1])
-                if stack[-1] == self._end:
+                visited.add(to_visit)
+                if to_visit == self._end:
                     solution = tuple(((i[0] + 1) >> 1, (i[1] + 1) >> 1)
                                      for i in stack)
                     self._solution = solution
@@ -225,6 +226,34 @@ class Maze:
             raise Exception("No solution")
         else:
             return self._solution
+
+    def GetSolutionCell(self, x, y, solution, indexes):
+        """
+            Returns solution cell symbol if cell in solution
+            or empty cell symbol instead
+        """
+
+        if (x, y) in solution:
+            index = indexes[(x, y)]
+            top = ((index > 0 and
+                    (x - 1, y) == solution[index-1]) or
+                   (index < len(solution) - 1 and
+                    (x - 1, y) == solution[index+1]))
+            right = ((index > 0 and
+                      (x, y + 1) == solution[index-1]) or
+                     (index < len(solution) - 1 and
+                      (x, y + 1) == solution[index+1]))
+            bottom = ((index > 0 and
+                       (x + 1, y) == solution[index-1]) or
+                      (index < len(solution) - 1 and
+                       (x + 1, y) == solution[index+1]))
+            left = ((index > 0 and
+                     (x, y - 1) == solution[index-1]) or
+                    (index < len(solution) - 1 and
+                     (x, y - 1) == solution[index+1]))
+            return GetPath((top << 3) + (right << 2) + (bottom << 1) +
+                           (left << 0))
+        return ' '
 
     def ShowSolution(self) -> None:
         """Prints the solution of the maze to the console"""
@@ -238,47 +267,10 @@ class Maze:
         for i in range(2 * self.height + 1):
             for j in range(2 * self.width + 1):
                 if self._cells[i][j] == 0:
-                    if (i, j) in solution:
-                        index = indexes[(i, j)]
-                        top = ((index > 0 and
-                                (i - 1, j) == solution[index-1]) or
-                               (index < len(solution) - 1 and
-                                (i - 1, j) == solution[index+1]))
-                        right = ((index > 0 and
-                                  (i, j + 1) == solution[index-1]) or
-                                 (index < len(solution) - 1 and
-                                  (i, j + 1) == solution[index+1]))
-                        bottom = ((index > 0 and
-                                   (i + 1, j) == solution[index-1]) or
-                                  (index < len(solution) - 1 and
-                                   (i + 1, j) == solution[index+1]))
-                        left = ((index > 0 and
-                                 (i, j - 1) == solution[index-1]) or
-                                (index < len(solution) - 1 and
-                                 (i, j - 1) == solution[index+1]))
-                        print(getPath((top << 3) +
-                                      (right << 2) +
-                                      (bottom << 1) +
-                                      (left << 0)), end='')
-                    else:
-                        print(' ', end='')
+                    print(self.GetSolutionCell(i, j, solution, indexes),
+                          end='')
                 else:
-                    top = 0
-                    right = 0
-                    bottom = 0
-                    left = 0
-                    if i != 0:
-                        top = self._cells[i - 1][j] != 0
-                    if j != 2 * self.width:
-                        right = self._cells[i][j + 1] != 0
-                    if i != 2 * self.height:
-                        bottom = self._cells[i + 1][j] != 0
-                    if j != 0:
-                        left = self._cells[i][j - 1] != 0
-                    print(getWall((top << 3) +
-                                  (right << 2) +
-                                  (bottom << 1) +
-                                  (left << 0)), end='')
+                    print(self.GetSimpleWall(i, j), end='')
             print()
 
     def GameStatus(self) -> bool:
@@ -333,33 +325,15 @@ class DFSMaze(Maze):
             if stack[-1] == self._end:
                 self._solution = tuple(((i[0] + 1) >> 1, (i[1] + 1) >> 1)
                                        for i in stack)
-            can_visit = []
-            to_north = (stack[-1][0] - 2, stack[-1][1])
-            to_east = (stack[-1][0], stack[-1][1] + 2)
-            to_south = (stack[-1][0] + 2, stack[-1][1])
-            to_west = (stack[-1][0], stack[-1][1] - 2)
-
-            if (to_north[0] > 0 and to_north not in visited):
-                can_visit.append(to_north)
-            if (to_east[1] < 2 * self.width and to_east not in visited):
-                can_visit.append(to_east)
-            if (to_south[0] < 2 * self.height and to_south not in visited):
-                can_visit.append(to_south)
-            if (to_west[1] > 0 and to_west not in visited):
-                can_visit.append(to_west)
+            can_visit = self.GetWays(stack[-1], visited)
             if len(can_visit) == 0:
                 stack.pop()
                 stack_len -= 1
+
             else:
                 to_visit = random.choice(can_visit)
-                if (to_visit == to_north):
-                    self._cells[stack[-1][0] - 1][stack[-1][1]] = 0
-                if (to_visit == to_east):
-                    self._cells[stack[-1][0]][stack[-1][1] + 1] = 0
-                if (to_visit == to_south):
-                    self._cells[stack[-1][0] + 1][stack[-1][1]] = 0
-                if (to_visit == to_west):
-                    self._cells[stack[-1][0]][stack[-1][1] - 1] = 0
+                self._cells[(stack[-1][0] + to_visit[0]) //
+                            2][(stack[-1][1] + to_visit[1])//2] = 0
                 stack_len += 1
                 stack.append(to_visit)
                 visited.add(stack[-1])
@@ -402,7 +376,7 @@ class SpanningTreeMaze(Maze):
 
     def Generate(self, width=1, height=1) -> None:
         """Generates new maze by making the minimal spanning tree of cells"""
-        
+
         super().Generate(width, height)
         walls = []
         cells = dict()
