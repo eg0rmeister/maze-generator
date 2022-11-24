@@ -38,14 +38,21 @@ winning_message = "You Won! press escape to exit"
 win_status = 1
 exit_status = 0
 
+wrong_start_message = """
+Main Usage\n
+\tmain <maze_type> <width> <height> <mode>\n
+\tavailable maze types: DFS, spanning_tree\n
+\tavailable modes: play, show\n
+"""
+
 help_message = """
-                \tw/a/s/d -- move the character '┼'\n
-                \th -- display these tips\n
-                \tescape -- exit the game WITHOUT displaying solution\n
-                \t1 -- display the solution and continue playing\n
-                \tf -- save the game\n
-                \tr -- load the game\n
-               """
+\tw/a/s/d -- move the character '┼'\n
+\th -- display these tips\n
+\tescape -- exit the game WITHOUT displaying solution\n
+\t1 -- display the solution and continue playing\n
+\tf -- save the game\n
+\tr -- load the game\n
+"""
 
 tip = "use wasd to move or h to display help message"
 
