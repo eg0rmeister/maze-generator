@@ -34,15 +34,22 @@ command_solve_exit = "exit and solve"
 wrong_move_message = "that move is prohibited"
 winning_message = "You Won!"
 
+wrong_start_message = """
+Main Usage\n
+\tmain <maze_type> <width> <height> <mode>\n
+\tavailable maze types: DFS, spanning_tree\n
+\tavailable modes: play, show\n
+"""
+
 help_message = """
-                \tw/a/s/d -- move the character '┼'\n
-                \thelp -- display these tips\n
-                \texit and solve -- exit the game and display the solution\n
-                \texit -- exit the game WITHOUT displaying solution\n
-                \tsolution -- display the solution and continue playing\n
-                \tsave <filename> -- save the game to file named <filename>\n
-                \tload <filename> -- load the game from file named <filename>\n
-               """
+\tw/a/s/d -- move the character '┼'\n
+\thelp -- display these tips\n
+\texit and solve -- exit the game and display the solution\n
+\texit -- exit the game WITHOUT displaying solution\n
+\tsolution -- display the solution and continue playing\n
+\tsave <filename> -- save the game to file named <filename>\n
+\tload <filename> -- load the game from file named <filename>\n
+"""
 
 if os.name == 'nt':
     clear_command = "cls"
