@@ -374,6 +374,25 @@ class SpanningTreeMaze(Maze):
 
         ref = property(GetRef, SetRef)
 
+    def Unseparate(self, wall, cells):
+        """Deletes wall if two cells it separates are in different groups"""
+        if wall[0] & 1:
+            if (
+                cells[(wall[0], wall[1] - 1)].ref !=
+                cells[(wall[0], wall[1] + 1)].ref
+            ):
+                self._cells[wall[0]][wall[1]] = 0
+                cells[(wall[0], wall[1] - 1)].ref = (
+                    cells[(wall[0], wall[1] + 1)].ref)
+        else:
+            if (
+                cells[(wall[0] - 1, wall[1])].ref !=
+                cells[(wall[0] + 1, wall[1])].ref
+            ):
+                self._cells[wall[0]][wall[1]] = 0
+                cells[(wall[0] - 1, wall[1])].ref = (
+                    cells[(wall[0] + 1, wall[1])].ref)
+
     def Generate(self, width=1, height=1) -> None:
         """Generates new maze by making the minimal spanning tree of cells"""
 
@@ -388,21 +407,6 @@ class SpanningTreeMaze(Maze):
                     cells[(i, j)] = self.__ref()
         random.shuffle(walls)
         for wall in walls:
-            if wall[0] & 1:
-                if (
-                    cells[(wall[0], wall[1] - 1)].ref !=
-                    cells[(wall[0], wall[1] + 1)].ref
-                ):
-                    self._cells[wall[0]][wall[1]] = 0
-                    cells[(wall[0], wall[1] - 1)].ref = (
-                        cells[(wall[0], wall[1] + 1)].ref)
-            else:
-                if (
-                    cells[(wall[0] - 1, wall[1])].ref !=
-                    cells[(wall[0] + 1, wall[1])].ref
-                ):
-                    self._cells[wall[0]][wall[1]] = 0
-                    cells[(wall[0] - 1, wall[1])].ref = (
-                        cells[(wall[0] + 1, wall[1])].ref)
+            self.Unseparate(wall, cells)
         self._cells[0][1] = 0
         self._cells[2 * self.height][2 * self.width - 1] = 0
