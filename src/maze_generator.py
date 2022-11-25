@@ -207,7 +207,7 @@ class Maze:
                 temp = True
                 for cell in self.GetWays(stack[-1], visited):
                     if (self._cells[(stack[-1][0] + cell[0]) // 2]
-                                   [(stack[-1][1] + cell[1]) //2] == 0):
+                                   [(stack[-1][1] + cell[1]) // 2] == 0):
                         to_visit = cell
                         temp = False
                         break
@@ -329,7 +329,6 @@ class DFSMaze(Maze):
             if len(can_visit) == 0:
                 stack.pop()
                 stack_len -= 1
-
             else:
                 to_visit = random.choice(can_visit)
                 self._cells[(stack[-1][0] + to_visit[0]) //
